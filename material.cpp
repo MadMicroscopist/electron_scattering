@@ -36,7 +36,7 @@ void Material::load_Data(char* ptrLine)
 	file_out.open("test.dat");
 	for(int j = 0; j < 50; j++)
 	{
-		for (int i =0; i < 35; i++) 
+		for (int i =0; i < 35; i++)
 		{
 			if (i==34) file_out << Array[i][j] << std::endl;
 			else file_out << Array[i][j] << "\t";
@@ -74,7 +74,7 @@ void Material::fill_probability()
 double Material::receive_theta(double E_i)
 {
 	double rnd = rndMy();
-	int col, row;
+    int col, row;
     col = column_search(rnd);
 	row = row_search (E_i);
 	if (row < 0 && col < 0)
@@ -102,8 +102,11 @@ double Material::receive_theta(double E_i)
 	}
 }
 
-/*Function returns random value for phi angle*/
-double Material::receive_phi(){return rndMy()*6.28 - 3.14;}
+/* Function to get phi angle value*/
+double Material::receive_phi()
+{
+    return ( rndMy()*6.28-3.14 );
+}
 
 /* Function for total elastic Mott cross section determination for instant energy value */
 double Material::receive_total_cs(double E_i)

@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <cstdlib>
+#include <ctime>
 #include <iostream>
 #include <fstream>
 #include "betheMaterial.h"
@@ -14,7 +15,8 @@ betheMaterial::betheMaterial()
 {
     std::cout << "Choose needed material." << std::endl;
     std::cout << "Enter corresponding number:" << std::endl;
-    std::cout << "1 - Si" << "\t" << "2 - Al" << "\t" <<  std::endl;
+    std::cout << "1 - Si" << "\t" << "2 - Al" << "\t" <<  "3 - C" << "\t"
+    << "4 - Cu" << "\t" << "5 - Au" << "\t" << "6 - Pt" << "\t" << std::endl;
     int choise;
     std::cin >> choise;
     double mZ, mA, mJ, mRh;
@@ -33,6 +35,38 @@ betheMaterial::betheMaterial()
 			std::cout << "Material parameters for Al was chosen." << std::endl;
 			char Al_name[] = "eMcsAl.dat";
 			set_material_parameters(13, 27, 170, 2.70, Al_name);
+        } break;
+
+        case 3:
+		{
+			//C
+			std::cout << "Material parameters for C was chosen." << std::endl;
+			char C_name[] = "eMcsC.dat";
+			set_material_parameters(6, 12, 79.1, 2.25, C_name);
+        } break;
+
+        case 4:
+        {
+            //Cu
+            std::cout << "Material parameters for Cu was chosen." << std::endl;
+            char Cu_name[] = "eMcsCu.dat";
+            set_material_parameters(29, 63.5, 332, 8.96, Cu_name);
+        } break;
+
+        case 5:
+        {
+            //Au
+            std::cout << "Material parameters for Au was chosen." << std::endl;
+            char Au_name[] = "eMcsAu.dat";
+            set_material_parameters(79, 197, 789, 19.30, Au_name);
+        } break;
+
+        case 6:
+        {
+            //Pt
+            std::cout << "Material parameters for Pt was chosen." << std::endl;
+            char Pt_name[] = "eMcsPt.dat";
+            set_material_parameters(78, 195, 792, 21.45, Pt_name);
         } break;
 
 		default:
@@ -96,8 +130,10 @@ void betheMaterial::set_material_parameters(double mZ, double mA, double mJ, dou
 double betheMaterial::calculate_step( double E_inst )
 {
     double eMcs = receive_total_cs(E_inst);
-	double mean_lenght = get_material_A() / ( N_Avogadro *get_material_density() * eMcs);
-    double lenght = -mean_lenght*log(rndMy());
+	double mean_lenght = get_material_A() / ( N_Avogadro *get_material_density() * eMcs); //cm
+    std::srand(time(0));
+    double random_value = rndMy();
+    double lenght = -mean_lenght*log(random_value);
     if (lenght > 1000*mean_lenght) lenght = 1000*mean_lenght;
     return lenght;
 }	//end of function
@@ -105,5 +141,6 @@ double betheMaterial::calculate_step( double E_inst )
 //function for electron energy loss calculation
 double betheMaterial::calculate_E_loss(double E_i, double step_lenght)
 {
-	return 7.85*1e4*( (get_material_Z() * get_material_density() )/( get_material_A() * E_i/1000 )) * log( ( 1.166* (E_i + 0.85 * get_meanIP()) ) / get_meanIP() )*step_lenght;
+	//E_i in keV, step_lenght in cm
+    return 7.85*1e4*( (get_material_Z() * get_material_density() )/( get_material_A() * E_i*1e-3 )) * log( ( 1.166* (E_i + 0.85 * get_meanIP()) ) / get_meanIP() )*step_lenght;
 }	//end of function
