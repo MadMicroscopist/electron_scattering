@@ -6,11 +6,16 @@
 
 #include <random>
 #include <ctime>
-inline double rndMy()
+#include <iostream>
+
+#include <windows.h>
+#include <Wincrypt.h>
+inline double rndMy( double R)
 {
-	//std::random_device rd;
-    std::mt19937_64 gen(time(NULL)+std::rand() % 100);
-	return (1 - std::generate_canonical<double, 10>(gen) );
+	int T = static_cast<unsigned int>(time(NULL)*R);
+	std::mt19937_64 gen( T );
+	double r = (1 - std::generate_canonical<double, 10>(gen) );
+	return r;
 }
 
 class Material{
@@ -22,6 +27,9 @@ class Material{
         double receive_theta(double E_i);
         double receive_phi();
 		double receive_total_cs(double E_i);
+//get and set functions
+		double get_Rnd()const {return R;}
+		void set_Rnd(double);
     protected:
 		//Function which read Mott cross section values from file to array
         void load_Data(char* );
@@ -36,6 +44,9 @@ class Material{
 
         /*Function for determination of instant energy value location in table */
         int row_search (double E_i);
+
+		//Global random number storage variable
+		double R;
 }; //end of class
 
 #endif

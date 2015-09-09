@@ -126,14 +126,22 @@ void betheMaterial::set_material_parameters(double mZ, double mA, double mJ, dou
 	load_Data(ptrLine);
 }
 
+//function for material Bethe range calculation
+double betheMaterial::betheRange(double E_i)
+{
+	return( 27.6*get_material_A()*pow(E_i*1e-3, 1.67)/(get_material_density()*pow(get_material_Z(), 0.89)/4) );
+}
+
 //calculate step lenght
 double betheMaterial::calculate_step( double E_inst )
 {
     double eMcs = receive_total_cs(E_inst);
 	double mean_lenght = get_material_A() / ( N_Avogadro *get_material_density() * eMcs); //cm
-    std::srand(time(0));
-    double random_value = rndMy();
+    //std::srand(time(0));
+    double random_value = rndMy(get_Rnd());
+	set_Rnd(random_value);
     double lenght = -mean_lenght*log(random_value);
+	std::cout << lenght << std::endl;
     if (lenght > 1000*mean_lenght) lenght = 1000*mean_lenght;
     return lenght;
 }	//end of function
@@ -142,5 +150,7 @@ double betheMaterial::calculate_step( double E_inst )
 double betheMaterial::calculate_E_loss(double E_i, double step_lenght)
 {
 	//E_i in keV, step_lenght in cm
-    return 7.85*1e4*( (get_material_Z() * get_material_density() )/( get_material_A() * E_i*1e-3 )) * log( ( 1.166* (E_i + 0.85 * get_meanIP()) ) / get_meanIP() )*step_lenght;
+	double dE = 7.85*1e4*( (get_material_Z() * get_material_density() )/( get_material_A() * E_i*1e-3 )) * log( ( 1.166* (E_i + 0.85 * get_meanIP()) ) / get_meanIP() )*step_lenght;
+	std::cout << dE << std::endl;
+    return dE;
 }	//end of function

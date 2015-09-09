@@ -38,15 +38,19 @@
         double get_y() const {  return Coordinate[1];}
         double get_z() const {  return Coordinate[2];}
         double get_energy() const {  return electron_energy;}
+		bool get_e_status() const {	 return BSE;}
 
         void rotate(double phi, double theta); /* electron coordinate system rotation function */
 
         double e_step(double lenght); /*electron move step appliment */
+
+		void backScattering();
     protected:
         double	Coordinate[3];
     private:
         double	Ort[9];
         double  electron_energy;
+		bool BSE;
     }; //end of ELECTRON class
 
 #endif

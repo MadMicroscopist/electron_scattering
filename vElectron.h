@@ -12,13 +12,13 @@
         vElectron(
         ); //end of constructor
 //set functions
-        void set_xy_temp( double, double);
+        void set_xz_temp( double, double);
 //get functions
         double get_x1() const {  return x1;}
-        double get_y1() const {  return y1;}
+        double get_z1() const {  return z1;}
 
     private:
-        double	x1, y1;
+        double	x1, z1;
     }; //end of vELECTRON class
 
 #endif

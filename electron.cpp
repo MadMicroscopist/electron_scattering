@@ -13,6 +13,7 @@ Electron::Electron(double e_x, double e_y, double e_z,
         set_coordinates(e_x, e_y, e_z);
         fill_Rmatrix(ort0, ort1, ort2, ort3, ort4, ort5, ort6, ort7, ort8);
         set_energy(e_energy);
+		BSE = false;
         std::cout << "Electron object created" << std::endl;
 } //end of Constructor
 
@@ -34,7 +35,7 @@ void Electron::fill_Rmatrix(double ort0, double ort1, double ort2, double ort3, 
 //Set initial energy value
 void Electron::set_energy(double e_energy)
 {
-    electron_energy = (e_energy > 0)?e_energy:10;
+    electron_energy = (e_energy > 0)?e_energy:10000;
 }   //end of function
 
 //Set x- and y-coordinate values
@@ -49,6 +50,11 @@ void Electron::set_z(double e_z)
 {
     Coordinate[2] = (e_z >= 0)?e_z:0;
 }   //end of function
+
+void Electron::backScattering()
+{
+	BSE = true;
+}
 
 //Rotate electron coordinate system
 void Electron::rotate(double phi, double theta)

@@ -23,6 +23,8 @@ class betheMaterial : public Material{
         double get_material_A() const {return material_A;}
         double get_meanIP() const {return meanIP;}
         double get_material_density() const {return material_density;}
+//function for material Bethe range calculation
+		double betheRange(double);
 //function for electron step lenght calculation
         double calculate_step( double E_i );
 //function for electron energy loss calculation

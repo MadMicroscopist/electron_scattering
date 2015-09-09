@@ -5,12 +5,12 @@
 
 vElectron::vElectron()
 {
-    set_xy_temp(Coordinate[0], Coordinate[1]);
+    set_xz_temp(Coordinate[0], Coordinate[2]);
 } //end of constructor
 
 //set functions
-void vElectron::set_xy_temp( double temp_x, double temp_y)
+void vElectron::set_xz_temp( double temp_x, double temp_z)
 {
     x1 = temp_x;
-    y1 = temp_y;
+    z1 = temp_z;
 }   //end of function

@@ -10,6 +10,7 @@
 Material::Material()
 {
     std::cout << "Material object is created." << std::endl;
+	R = 0.5;
 }   //end of constructor
 
 /*Function for filling an array for differential Mott elastic cross section values
@@ -70,10 +71,16 @@ void Material::fill_probability()
 	}
 }
 
+void Material::set_Rnd(double rr)
+{
+	R = rr;
+}
+
 /*Function for instant theta angle value determination */
 double Material::receive_theta(double E_i)
 {
-	double rnd = rndMy();
+	double rnd = rndMy(get_Rnd());
+	set_Rnd(rnd);
     int col, row;
     col = column_search(rnd);
 	row = row_search (E_i);
@@ -105,7 +112,9 @@ double Material::receive_theta(double E_i)
 /* Function to get phi angle value*/
 double Material::receive_phi()
 {
-    return ( rndMy()*6.28-3.14 );
+    double rr = rndMy(get_Rnd());
+	set_Rnd(rr);
+	return (rr*360-180)/3.14 ;
 }
 
 /* Function for total elastic Mott cross section determination for instant energy value */
