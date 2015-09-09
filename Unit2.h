@@ -118,6 +118,10 @@ __published:	// IDE-managed Components
     TEdit *Edit24;
     TLabel *Label29;
     TButton *Button12;
+    TMemo *Memo3;
+    TMemo *Memo4;
+    TButton *Button13;
+    TButton *Button14;
         void __fastcall RadioButton1Click(TObject *Sender);
         void __fastcall RadioButton2Click(TObject *Sender);
         void __fastcall Button1Click(TObject *Sender);
@@ -130,12 +134,13 @@ __published:	// IDE-managed Components
     void __fastcall Button11Click(TObject *Sender);
     void __fastcall CheckBox2Click(TObject *Sender);
     void __fastcall Button12Click(TObject *Sender);
+    void __fastcall Button13Click(TObject *Sender);
+    void __fastcall Button14Click(TObject *Sender);
 private:	// User declarations
 public:		// User declarations
         __fastcall TForm1(TComponent* Owner);
             long F2L(double value);
             double Rotate(long flag, double ort, double c_fi, double s_fi, double c_c, double s_s, double c_s, double s_c, double psy, double lenght);
-            double Interface(bool direction, double En, double s, double z_1, double z_l, double z_2);
             void TForm1::DrawArrayF (double **array,  TImage *img);
             void TForm1::Spacimen_substrate( void);
             void TForm1::Spacimen_layer( void);

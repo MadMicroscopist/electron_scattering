@@ -44,6 +44,7 @@ long Pole[N][N];
 long A[N][N];
 long C[N][N];
 double BSE[N2] ;
+double BSE_E[N2] ;
 double BSE_norm[N2];
 double BSE_calc[N][N];
 double Ort[9];
@@ -52,7 +53,6 @@ long Z, Z_l, Z_sub;            //заряд ядра атомов
 double Az, Az_l, Az_sub;   //в а е м атомная масса атомов
 double ro, ro_l, ro_sub;   //плотность вещества в г/см3
 double J, J_l, J_sub;   //средний потенциал ионизации атомов
-double temp;
 
 //---------------------------------------------------------------------------
 __fastcall TForm1::TForm1(TComponent* Owner)
@@ -127,42 +127,7 @@ void TForm1::Spacimen_layer( void)
     J = J_l;
 
 }
-//---------------------------------------------------------------------------
 
-/*void TForm1::DrawArrayL (long *array, long size, TImage *img)
-{
-    //Функция отрисовки 2D массива целых данных
-    long max = 1;
-    for(long i = 0; i < size; i++)
-    {
-        for(long j = 0; j < size; j++)
-        {
-            if( max < array[i][j] ) max = array[i][j];
-        }
-    }
-
-    for(long i = 0; i < size; i++)
-    {
-        for(long j = 0; j < size; j++)
-        {
-            img->Canvas->Pixels[i][j] = F2L( (array[i][j]/max)*255 )*0x010101;
-        }
-    }
-}
-   */
-/*void Print_File_Matrix(double end[][100],int x1,int y1,char *str)
-{
- FILE *out=fopen(str,&quot;w&quot;);
- int i,j;
- i=j=0;
- for(i=0;i&lt;x1;i++,fprintf(out,&quot;\n&quot;))
-   for(j=0;j&lt;y1;j++)
-     fprintf(out,&quot;%2.3lf &quot;,end[i][j]);
- fprintf(out,&quot;\n&quot;);
- close(out);
-}
-//Это запись двумерного массива типа double, функция принимает массив,размерность массива и строку(имя файла)
-*/
 //---------------------------------------------------------------------------
 
 double TForm1::Rotate(long flag, double ort, double c_fi, double s_fi, double c_c, double s_s, double c_s, double s_c, double psy, double lenght)
@@ -180,32 +145,6 @@ double TForm1::Rotate(long flag, double ort, double c_fi, double s_fi, double c_
 
         return(ort);
 }
-
-//---------------------------------------------------------------------------
-
-double TForm1::Interface(bool direction, double En, double s, double z_1, double z_l, double z_2)
-{
-        //Функция обсчёта пробега для пересечения интерфейса слоя
-
-        double S_1, S_2, ro_1, ro_2, Z1, Z2, Az1, Az2;
-
-        if (direction)
-        {
-                ro_1 = ro_l; ro_2 = ro_sub; Z1 = Z_l; Z2 = Z_sub; Az1 = Az_l; Az2 = Az_sub;
-                S_1 = (z_l-z_1)/(z_2-z_1)*s;
-                S_2 = (-z_l+z_2)/(z_2-z_1)*s*(ro_1*pow((Z1/Z2), 0.67)/(ro_2));
-        }
-        else
-        {
-                ro_2 = ro_l; ro_1 = ro_sub; Z2 = Z_l; Z1 = Z_sub; Az2 = Az_l; Az1 = Az_sub;
-                S_1 = s*(-z_l+z_1)/(-z_2+z_1);
-                S_2 = s*(z_l-z_2)/(-z_2+z_1)*(ro_1*pow((Z1/Z2), 0.67)/(ro_2));
-        }
-        s = S_1+S_2;
-        temp = En - 7.85*1e4*log((1666*En)/J)*(1/En)*( (Z1*ro_1*S_1)/Az1 + (Z2*ro_2*S_2)/Az2 );
-        return(s);
-}
-
 
 //---------------------------------------------------------------------------
 
@@ -272,7 +211,7 @@ void __fastcall TForm1::Button1Click(TObject *Sender)
         Image1->Canvas->MoveTo(Image1->Width/2+F2L(20*sin(a0)/cos(a0)), 0);
         Image1->Canvas->LineTo(Image1->Width/2, 20);
         //ЗАВЕРШЕНА подготовка
-
+        
         for (long j = 1; j <= current; j++)  //ОСНОВНОЙ ЦИКЛ со счётчиком электронов
         {
             ProgressBar2->Position = (j*100)/current;   //интерфейс: прогресс бар
@@ -290,8 +229,6 @@ void __fastcall TForm1::Button1Click(TObject *Sender)
                 o++;            //счётчик шагов траектории
                 //НАЧАЛЬНЫЕ ПАРАМЕТРЫ движения: радиальный угол, сечение столкновения, средняя длина свободного пробега
                 Spacimen_layer();
-                bool direction = true;
-
                 double psi =  rad*(random(2*180+1)-180);
                 double alpha =(3.4*1e-3*pow(Z,0.67))/(Ei);
                 double sigma =(5.21*1e-21*pow(Z/Ei,2)) * ( (4*M_PI)/(alpha*(1+alpha)) ) * pow( (Ei+511)/(Ei+1024) , 2);
@@ -307,23 +244,6 @@ void __fastcall TForm1::Button1Click(TObject *Sender)
 
                 double rnd = ((double)random( dl ) + 1) / (double)dl;
                 double lt = -lambda*log( rnd );
-                double zz = Rotate(2, z, cosfi, sinfi, cc, ss, cs, sc, psi, lt);
-                if ( (zz > tol) && (n == 0) )
-                {
-                        lt = Interface(direction, Ei, lt, z, tol, zz);
-                        n = 1;
-                        Ei = temp;
-                        Spacimen_substrate();
-                }
-                if ( (zz <= tol) && (n == 1) )
-                {
-                        direction = false;
-                        lt = Interface(direction, Ei, lt, z, tol, zz);
-                        n = 0;
-                        Ei = temp;
-                        Spacimen_layer();
-                }
-                else Ei = Ei - 7.85*1e4*((Z*ro)/(Az*Ei))*log((1666*Ei)/J)*lt;
                 path = path + lt;
                 //ЗАКОНЧЕН рассчёт параметров
                 //ПОВОРОТ вектора движения электрона
@@ -331,11 +251,24 @@ void __fastcall TForm1::Button1Click(TObject *Sender)
                 y = Rotate(1, y, cosfi, sinfi, cc, ss, cs, sc, psi, lt);
                 z = Rotate(2, z, cosfi, sinfi, cc, ss, cs, sc, psi, lt);
                 //ЗАКОНЧЕН поворот
+                Ei = Ei - 7.85*1e4*((Z*ro)/(Az*Ei))*log((1666*Ei)/J)*lt;
                 if (r==1)
                 {
-                        Image4->Canvas->LineTo( F2L((x/scale*cm)/pixl) + 250, F2L((y/scale*cm)/pixl)+250);  //рисуем отрезок траектории электрона
-                        if (m==1) Image1->Canvas->LineTo( F2L((x/scale*cm)/pixl) + 250, F2L((z/scale*cm)/pixl)+20);
-                        if (m==2) Image1->Canvas->LineTo( F2L((y/scale*cm)/pixl) + F2L(Image1->Width/2), F2L((z/scale*cm)/pixl)+20);
+                    Image4->Canvas->LineTo( F2L((x/scale*cm)/pixl) + 250, F2L((y/scale*cm)/pixl)+250);  //рисуем отрезок траектории электрона
+                    if (m==1) Image1->Canvas->LineTo( F2L((x/scale*cm)/pixl) + 250, F2L((z/scale*cm)/pixl)+20);
+                    if (m==2) Image1->Canvas->LineTo( F2L((y/scale*cm)/pixl) + F2L(Image1->Width/2), F2L((z/scale*cm)/pixl)+20);
+                }
+                if ( (z > tol)&&(n == 0) )
+                {
+                    Spacimen_substrate();
+                    z = 0;
+                    n = 1;
+                }
+                if ( (z < 0)&&(n > 0) )
+                {
+                    Spacimen_layer();
+                    z = tol;
+                    n = 0;
                 }
             } while ( ( ( (double)Ei > Emin ) && ( (z > 0) ) && (n >= 0) ) );
 
@@ -344,7 +277,11 @@ void __fastcall TForm1::Button1Click(TObject *Sender)
                 long r1 = F2L( sqrt(pow( ( (x*cm)/pixl)/scale,2 )+ pow( ( (y*cm)/pixl)/scale ,2 ) ) );
                 long x1 = F2L( ((x*cm)/pixl)/scale ) + (N-1)/2;
                 long y1 = F2L( ((y*cm)/pixl)/scale ) + (N-1)/2;
-                if(r1 <= N2 ) BSE[r1]++;
+                if(r1 <= N2 )
+                {
+                    BSE[r1]++;
+                    BSE_E[F2L(Ei/E*(N2-1))]++;
+                }
                 if ( ((y1<N) && (y1>0)) && ( (x1<N) && (x1>0)) ) B[x1][y1]++;
                 l++;
             }
@@ -361,10 +298,9 @@ void __fastcall TForm1::Button1Click(TObject *Sender)
             SP =SP/(F2L(tol*cm/pixl)*k);
             Edit9->Text = SP;
         }
-
-        for(long i = 0; i < N2; i++)
+        for(long j = 0; j < N2; j++)
         {
-            BSE[i] = BSE[i]/current;
+            BSE[j] = BSE[j]/(3.14* ( pow(j+1,2)- pow(j,2) ) ) ;
         }
         double BSy = (double)l/current;
         Edit12->Text = BSy;
@@ -652,6 +588,18 @@ void __fastcall TForm1::Button12Click(TObject *Sender)
                 file_output << B[i][j] << endl;
             }
         }
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::Button13Click(TObject *Sender)
+{
+    for (long i = 0; i < N2; i++) Memo3->Lines->Add(BSE[i]);
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::Button14Click(TObject *Sender)
+{
+    for(long i = 0; i < N2; i++) Memo4->Lines->Add(BSE_E[i]);    
 }
 //---------------------------------------------------------------------------
 

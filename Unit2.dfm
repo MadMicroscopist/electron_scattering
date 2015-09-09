@@ -1,6 +1,6 @@
 object Form1: TForm1
-  Left = 40
-  Top = 26
+  Left = 225
+  Top = 324
   AutoSize = True
   BorderStyle = bsSingle
   Caption = #1056#1072#1089#1089#1077#1103#1085#1080#1077
@@ -366,6 +366,42 @@ object Form1: TForm1
               TabOrder = 2
               Text = '0'
             end
+            object Memo3: TMemo
+              Left = 304
+              Top = 8
+              Width = 113
+              Height = 97
+              Lines.Strings = (
+                'Memo3')
+              TabOrder = 3
+            end
+            object Memo4: TMemo
+              Left = 560
+              Top = 8
+              Width = 113
+              Height = 97
+              Lines.Strings = (
+                'Memo4')
+              TabOrder = 4
+            end
+            object Button13: TButton
+              Left = 208
+              Top = 32
+              Width = 75
+              Height = 41
+              Caption = 'BSE range'
+              TabOrder = 5
+              OnClick = Button13Click
+            end
+            object Button14: TButton
+              Left = 456
+              Top = 32
+              Width = 73
+              Height = 41
+              Caption = 'BSE energy'
+              TabOrder = 6
+              OnClick = Button14Click
+            end
           end
           object TabSheet6: TTabSheet
             Caption = #1055#1072#1088#1072#1084#1077#1090#1088#1099' '#1086#1089#1072#1078#1076#1077#1085#1080#1103
@@ -517,7 +553,7 @@ object Form1: TForm1
           Top = 616
           Width = 105
           Height = 41
-          Caption = 'Button12'
+          Caption = 'Save 2 File'
           TabOrder = 4
           OnClick = Button12Click
         end
