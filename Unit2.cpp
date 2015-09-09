@@ -6,6 +6,8 @@
 #include "Unit2.h"
 #include "stdlib.h"
 #include "math.h"
+#include "iostream.h"
+#include "fstream.h"
 
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
@@ -21,19 +23,19 @@ const double J=789;
 const double Z=78;        //заряд Pt
 const double Az=195;       //в а е м атомная масса Pt
 const double ro=21.45;   //плотность Pt в г/см3
-const double J=792;
-*/
+
 const double Z=14;                          //заряд кремния
 const double Az=28;                         //в а е м атомная масса кремния
 const double ro=2.33;                       //плотность кремния в г/см3
 const double J=178;                         //средний потенциал ионизации
+*/
 const double eV = 1.6*1e-19;                //электрон вольт
 const double rad = 0.01745;                 //радиан
 const double nm = 1e-9;                     //нанометр
 const double Na = 6.02*1e23;                //число Авогадро
 const double cm = 0.01;
 const double pixl = nm;
-const long N=501;                           //размер картинок
+const long N=2001;                           //размер картинок
 const long N2=2*N;                           //размер массива BSE
 long m,n,r;               //флаге
 
@@ -46,6 +48,11 @@ double BSE_norm[N2];
 double BSE_calc[N][N];
 double Ort[9];
 
+long Z, Z_l, Z_sub;            //заряд ядра атомов
+double Az, Az_l, Az_sub;   //в а е м атомная масса атомов
+double ro, ro_l, ro_sub;   //плотность вещества в г/см3
+double J, J_l, J_sub;   //средний потенциал ионизации атомов
+double temp;
 
 //---------------------------------------------------------------------------
 __fastcall TForm1::TForm1(TComponent* Owner)
@@ -96,7 +103,30 @@ void TForm1::DrawArrayF ( double ** array, TImage *img)
     }
 }
 
+//---------------------------------------------------------------------------
 
+void TForm1::Spacimen_substrate( void)
+{
+    //Функция замены параметров вещества на параметры подложки
+
+    Z = Z_sub;
+    Az = Az_sub;
+    ro = ro_sub;
+    J = J_sub;
+
+}
+//---------------------------------------------------------------------------
+
+void TForm1::Spacimen_layer( void)
+{
+    //Функция замены параметров вещества на параметры слоя
+
+    Z = Z_l;
+    Az = Az_l;
+    ro = ro_l;
+    J = J_l;
+
+}
 //---------------------------------------------------------------------------
 
 /*void TForm1::DrawArrayL (long *array, long size, TImage *img)
@@ -153,27 +183,37 @@ double TForm1::Rotate(long flag, double ort, double c_fi, double s_fi, double c_
 
 //---------------------------------------------------------------------------
 
+double TForm1::Interface(bool direction, double En, double s, double z_1, double z_l, double z_2)
+{
+        //Функция обсчёта пробега для пересечения интерфейса слоя
+
+        double S_1, S_2, ro_1, ro_2, Z1, Z2, Az1, Az2;
+
+        if (direction)
+        {
+                ro_1 = ro_l; ro_2 = ro_sub; Z1 = Z_l; Z2 = Z_sub; Az1 = Az_l; Az2 = Az_sub;
+                S_1 = (z_l-z_1)/(z_2-z_1)*s;
+                S_2 = (-z_l+z_2)/(z_2-z_1)*s*(ro_1*pow((Z1/Z2), 0.67)/(ro_2));
+        }
+        else
+        {
+                ro_2 = ro_l; ro_1 = ro_sub; Z2 = Z_l; Z1 = Z_sub; Az2 = Az_l; Az1 = Az_sub;
+                S_1 = s*(-z_l+z_1)/(-z_2+z_1);
+                S_2 = s*(z_l-z_2)/(-z_2+z_1)*(ro_1*pow((Z1/Z2), 0.67)/(ro_2));
+        }
+        s = S_1+S_2;
+        temp = En - 7.85*1e4*log((1666*En)/J)*(1/En)*( (Z1*ro_1*S_1)/Az1 + (Z2*ro_2*S_2)/Az2 );
+        return(s);
+}
+
+
+//---------------------------------------------------------------------------
+
 void __fastcall TForm1::RadioButton1Click(TObject *Sender)
 
 {
         RadioButton2->Checked =false;
 
-}
-//---------------------------------------------------------------------------
-
-void __fastcall TForm1::RadioButton4Click(TObject *Sender)
-
-{
-        Edit11->Enabled =false;
-        Edit9->Enabled =false;
-        n=2;
-}
-//---------------------------------------------------------------------------
-void __fastcall TForm1::RadioButton3Click(TObject *Sender)
-{
-        Edit11->Enabled =true;
-        Edit9->Enabled =true;
-        n=1;
 }
 //---------------------------------------------------------------------------
 
@@ -193,36 +233,50 @@ void __fastcall TForm1::Button1Click(TObject *Sender)
         Image4->Canvas->FillRect(Rect(0,0,N,N));
         if (RadioButton1->Checked==true) m =1;
         if (RadioButton2->Checked==true) m =2;
-        if (RadioButton3->Checked==true) n =1;
-        if (RadioButton4->Checked==true) n =2;
         if (CheckBox1->Checked==true) r=1;
         if (CheckBox1->Checked==false) r=0;
+        if (CheckBox2->Checked == true) n=0;
+        if (CheckBox2->Checked == false) n=-1;
 
         long rancon  = (atoi(Edit10->Text.c_str()));
         double E    = atof(Edit1->Text.c_str());        //начальная энергия электронов в пучке
         double Emin = atof(Edit4->Text.c_str());
-        double a0 = rad*atoi(Edit7->Text.c_str());      //угол падения электронного пучка
         long scale    = atoi(Edit2->Text.c_str());      //мастштаб отрисовки
         long current  = atoi(Edit5->Text.c_str());      //число обсчитываемых электронов
-        double tol = nm/cm*atoi(Edit11->Text.c_str());  //конечная толщина образца
+        double a0 = rad*atoi(Edit7->Text.c_str());      //угол падения электронного пучка
+        double tol = nm/cm*atoi(Edit24->Text.c_str());  //конечная толщина образца
         double th  = nm*atoi(Edit8->Text.c_str());      //полуширина детектора для измерения stopping power
         long dl = atoi(Edit13->Text.c_str());           //число промежутков дельта лямбда
         double SP = 0;                                  //значение SP
+
+        Z_l = atoi(Edit22->Text.c_str());            //заряд ядра атомов слоя
+        Az_l = atoi(Edit23->Text.c_str());   //в а е м атомная масса атомов слоя
+        ro_l = atof(Edit21->Text.c_str());   //плотность вещества слоя в г/см3
+        J_l = atoi(Edit26->Text.c_str());   //средний потенциал ионизации атомов слоя
+        Z_sub = atoi(Edit19->Text.c_str());            //заряд ядра атомов подложки
+        Az_sub = atoi(Edit20->Text.c_str());   //в а е м атомная масса атомов подложки
+        ro_sub = atof(Edit18->Text.c_str());   //плотность вещества подложки в г/см3
+        J_sub = atoi(Edit25->Text.c_str());   //средний потенциал ионизации атомов подложки
+
         long k = 0;     long o = 0;      long l = 0;
 
-        for (long j = 1; j <= current; j++)
+        //подготовка поля для ОТРИСОВКИ
+        Image1->Canvas->MoveTo(0, 20);
+        Image1->Canvas->LineTo(Image1->Width, 20);
+        Image4->Canvas->MoveTo(250, 250);
+        if (CheckBox2->Checked)     //multilayer specimen
         {
-            ProgressBar2->Position = (j*100)/current;
-            Image1->Canvas->MoveTo(0, 20);
-            Image1->Canvas->LineTo(Image1->Width, 20);
-            Image4->Canvas->MoveTo(250, 250);
-            if (n==1)     //finite specimen 
-            {
-                Image1->Canvas->MoveTo(0, F2L((tol/scale*cm)/pixl) + 20 );
-                Image1->Canvas->LineTo(Image1->Width, F2L((tol/scale*cm)/pixl) + 20);
-            }
-            Image1->Canvas->MoveTo(Image1->Width/2+F2L(20*sin(a0)/cos(a0)), 0);
-            Image1->Canvas->LineTo(Image1->Width/2, 20);
+            Image1->Canvas->MoveTo(0, F2L((tol/scale*cm)/pixl) + 20 );
+            Image1->Canvas->LineTo(Image1->Width, F2L((tol/scale*cm)/pixl) + 20);
+        }
+        Image1->Canvas->MoveTo(Image1->Width/2+F2L(20*sin(a0)/cos(a0)), 0);
+        Image1->Canvas->LineTo(Image1->Width/2, 20);
+        //ЗАВЕРШЕНА подготовка
+
+        for (long j = 1; j <= current; j++)  //ОСНОВНОЙ ЦИКЛ со счётчиком электронов
+        {
+            ProgressBar2->Position = (j*100)/current;   //интерфейс: прогресс бар
+            //ОПРЕДЕЛЕНИЕ начальных значений переменных
 
             Ort[0] =cos(a0); Ort[1] =0; Ort[2] =sin(a0); Ort[3] =0; Ort[4] =1; Ort[5] =0; Ort[6] =-sin(a0); Ort[7] =0; Ort[8] =cos(a0);
             double path = 0;
@@ -230,15 +284,19 @@ void __fastcall TForm1::Button1Click(TObject *Sender)
             double z = 0;
             double y = 0;
             double Ei =E;
-
+            //определение ЗАКОНЧЕНО
             do
-            {
-                o++;
+            {    //ЦИКЛ обсчёта ТРАЕКТОРИИ движения электрона
+                o++;            //счётчик шагов траектории
+                //НАЧАЛЬНЫЕ ПАРАМЕТРЫ движения: радиальный угол, сечение столкновения, средняя длина свободного пробега
+                Spacimen_layer();
+                bool direction = true;
+
                 double psi =  rad*(random(2*180+1)-180);
                 double alpha =(3.4*1e-3*pow(Z,0.67))/(Ei);
-                double sigma =(5.21*1e-21*(Z*Z)/(Ei*Ei)) * ( (4*M_PI)/(alpha*(1+alpha)) ) * pow( (Ei+511)/(Ei+1024) , 2);
+                double sigma =(5.21*1e-21*pow(Z/Ei,2)) * ( (4*M_PI)/(alpha*(1+alpha)) ) * pow( (Ei+511)/(Ei+1024) , 2);
                 double lambda = (Az/(Na*ro*sigma));
-
+                //РАССЧЁТ параметров шага: косинус азимутального угла, синус азимутального угла, длины шага
                 double randy = (double)(( random( rancon + 1 ) )) / (double)rancon;
                 double cosfi = 1.0 - 2.0*alpha*( randy )/(1.0 + alpha - randy);
                 double sinfi = 2* sqrt( alpha* ( 1 + alpha )* ( 1 - randy )* randy )/ ( 1 + alpha - randy);
@@ -249,23 +307,39 @@ void __fastcall TForm1::Button1Click(TObject *Sender)
 
                 double rnd = ((double)random( dl ) + 1) / (double)dl;
                 double lt = -lambda*log( rnd );
+                double zz = Rotate(2, z, cosfi, sinfi, cc, ss, cs, sc, psi, lt);
+                if ( (zz > tol) && (n == 0) )
+                {
+                        lt = Interface(direction, Ei, lt, z, tol, zz);
+                        n = 1;
+                        Ei = temp;
+                        Spacimen_substrate();
+                }
+                if ( (zz <= tol) && (n == 1) )
+                {
+                        direction = false;
+                        lt = Interface(direction, Ei, lt, z, tol, zz);
+                        n = 0;
+                        Ei = temp;
+                        Spacimen_layer();
+                }
+                else Ei = Ei - 7.85*1e4*((Z*ro)/(Az*Ei))*log((1666*Ei)/J)*lt;
                 path = path + lt;
-
+                //ЗАКОНЧЕН рассчёт параметров
+                //ПОВОРОТ вектора движения электрона
                 x = Rotate(0, x, cosfi, sinfi, cc, ss, cs, sc, psi, lt);
                 y = Rotate(1, y, cosfi, sinfi, cc, ss, cs, sc, psi, lt);
                 z = Rotate(2, z, cosfi, sinfi, cc, ss, cs, sc, psi, lt);
-
-                Ei = Ei - 7.85*1e4*((Z*ro)/(Az*Ei))*log((1666*Ei)/J)*lt;
-
+                //ЗАКОНЧЕН поворот
                 if (r==1)
                 {
-                    Image4->Canvas->LineTo( F2L((x/scale*cm)/pixl) + 250, F2L((y/scale*cm)/pixl)+250);  //рисуем отрезок траектории электрона
-                    if (m==1) Image1->Canvas->LineTo( F2L((x/scale*cm)/pixl) + 250, F2L((z/scale*cm)/pixl)+20);
-                    if (m==2) Image1->Canvas->LineTo( F2L((y/scale*cm)/pixl) + F2L(Image1->Width/2), F2L((z/scale*cm)/pixl)+20);
+                        Image4->Canvas->LineTo( F2L((x/scale*cm)/pixl) + 250, F2L((y/scale*cm)/pixl)+250);  //рисуем отрезок траектории электрона
+                        if (m==1) Image1->Canvas->LineTo( F2L((x/scale*cm)/pixl) + 250, F2L((z/scale*cm)/pixl)+20);
+                        if (m==2) Image1->Canvas->LineTo( F2L((y/scale*cm)/pixl) + F2L(Image1->Width/2), F2L((z/scale*cm)/pixl)+20);
                 }
-            } while ( ( (( (double)Ei > Emin ) ) && (z > 0) ) && ((z < tol) || (n ==2)));
+            } while ( ( ( (double)Ei > Emin ) && ( (z > 0) ) && (n >= 0) ) );
 
-            if  ( z < 0 )     //вносим частицы, вылетевшие на поврехность,  массив
+            if  (  (z < 0) && (n<=0) )     //вносим частицы, вылетевшие на поврехность,  массив
             {
                 long r1 = F2L( sqrt(pow( ( (x*cm)/pixl)/scale,2 )+ pow( ( (y*cm)/pixl)/scale ,2 ) ) );
                 long x1 = F2L( ((x*cm)/pixl)/scale ) + (N-1)/2;
@@ -275,11 +349,11 @@ void __fastcall TForm1::Button1Click(TObject *Sender)
                 l++;
             }
 
-            if (((z >tol) && (n ==1)) && (((((Image1->Width-1)/2)) + F2L(th/nm) >F2L(x/nm))&& (F2L(x/nm) >( (Image1->Width -1)/2 - F2L(th/nm) ) ) )  );
+            /*if (((z >tol) && (n ==1)) && (((((Image1->Width-1)/2)) + F2L(th/nm) >F2L(x/nm))&& (F2L(x/nm) >( (Image1->Width -1)/2 - F2L(th/nm) ) ) )  );
             {
                 SP = SP +(E-Ei)/eV;
                 k++;
-            }
+            }  */
         }
 
         if( k > 0 )
@@ -299,7 +373,7 @@ void __fastcall TForm1::Button1Click(TObject *Sender)
         Label7->Update();
 }
 //---------------------------------------------------------------------------
-
+/*
 void __fastcall TForm1::Button3Click(TObject *Sender)
 {
          long max1 = 1;
@@ -319,7 +393,7 @@ void __fastcall TForm1::Button3Click(TObject *Sender)
                     Image2->Canvas->Pixels[i][j] = (F2L(B[i][j]*255/max1))*0x010101;
                }
          }
-}
+}            */
 //---------------------------------------------------------------------------
 
 
@@ -376,7 +450,7 @@ void __fastcall TForm1::Button5Click(TObject *Sender)
 }
 //---------------------------------------------------------------------------
 
-
+ /*
 void __fastcall TForm1::Button4Click(TObject *Sender)
 {
 OpenDialog1->Execute();
@@ -397,7 +471,7 @@ OpenDialog1->Execute();
     Image3->Canvas->Brush->Color = clBlack;
     Image3->Canvas->FillRect(Rect(0,0,N,N));
   }
-}
+}  */
 //---------------------------------------------------------------------------
 
 void __fastcall TForm1::Button6Click(TObject *Sender)
@@ -558,5 +632,26 @@ void __fastcall TForm1::Button11Click(TObject *Sender)
     }
 }
 
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::CheckBox2Click(TObject *Sender)
+{
+    if (CheckBox2->Checked == true) n=0;
+    if (CheckBox2->Checked == false) n=-1;
+}
+//---------------------------------------------------------------------------
+
+
+void __fastcall TForm1::Button12Click(TObject *Sender)
+{
+        ofstream file_output("Exposition Array.txt");
+        for (int i = 0; i < N-1; i++)
+        {
+            for (int j = 0; j < N-1; j++)
+            {
+                file_output << B[i][j] << endl;
+            }
+        }
+}
 //---------------------------------------------------------------------------
 
