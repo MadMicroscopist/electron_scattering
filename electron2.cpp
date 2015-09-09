@@ -1,9 +1,9 @@
-//electron.cpp
+//electron2.cpp
 //Determination of functions of ELECTRON class
 
 #include <math.h>
 #include <iostream>
-#include "electron.h"
+#include "electron2.h"
 
 //ELECTRON class Constructor
 Electron::Electron(double e_x, double e_y, double e_z,
@@ -13,7 +13,7 @@ Electron::Electron(double e_x, double e_y, double e_z,
         set_coordinates(e_x, e_y, e_z);
         fill_Rmatrix(ort0, ort1, ort2, ort3, ort4, ort5, ort6, ort7, ort8);
         set_energy(e_energy);
-        std::cout << "Electron object created" << std::endl;
+		set_temp_xy(e_x, e_y);
 } //end of Constructor
 
 //Set coordinates
@@ -50,18 +50,24 @@ void Electron::set_z(double e_z)
     Coordinate[2] = (e_z >= 0)?e_z:0;
 }   //end of function
 
-//Rotate electron coordinate system
-void Electron::rotate(double phi, double theta)
+void Electron::set_temp_xy(double e_x, double e_y)
 {
-    double	cc =	cos(theta) * cos(phi);
-	double	sc =	sin(theta) * cos(phi);
-	double	cs =	cos(theta) * sin(phi);
-	double	ss =	sin(theta) * sin(phi);
+    x1 = e_x;
+    y1 = e_y;
+}   //end of function
+
+//Rotate electron coordinate system
+void Electron::rotate(double phi, double sin_th, double cos_th)
+{
+    double	cc =	cos_th * cos(phi);
+	double	sc =	sin_th * cos(phi);
+	double	cs =	cos_th * sin(phi);
+	double	ss =	sin_th * sin(phi);
 	for (int i=0; i<3 ; i++)
 	{
-		double e1 = 	cc * Ort[i] 	+ cs * Ort[i+3] 	- sin(theta) * Ort[i+6];
-		double e2 = 	-sin(theta) * Ort[i]+ cos(phi) * Ort[i+3];
-		double e3 =  	sc * Ort[i] 	+ ss * Ort[i+3] 	+ cos(theta) * Ort[i+6];
+		double e1 = 	cc * Ort[i] 	+ cs * Ort[i+3] 	- sin_th * Ort[i+6];
+		double e2 = 	-sin_th * Ort[i]+ cos(phi) * Ort[i+3];
+		double e3 =  	sc * Ort[i] 	+ ss * Ort[i+3] 	+ cos_th * Ort[i+6];
         Ort[i]	    =	e1;
         Ort[i+3]	=	e2;
         Ort[i+6]	=	e3;
@@ -82,7 +88,7 @@ double Electron::e_step(double lenght)
     {
         Coordinate[i]	=+	Ort[i+6] * lenght;
     }
-    return lenght;
+	return lenght;
 }
 
 //OVERRIDE input operation >>
