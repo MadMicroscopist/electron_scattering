@@ -45,7 +45,6 @@ double BSE[N2] ;
 double BSE_norm[N2];
 double BSE_calc[N][N];
 double Ort[9];
-double Energy[2000];
 
 
 //---------------------------------------------------------------------------
@@ -217,7 +216,7 @@ void __fastcall TForm1::Button1Click(TObject *Sender)
             Image1->Canvas->MoveTo(0, 20);
             Image1->Canvas->LineTo(Image1->Width, 20);
             Image4->Canvas->MoveTo(250, 250);
-            if (n==1)     //finite specimen
+            if (n==1)     //finite specimen 
             {
                 Image1->Canvas->MoveTo(0, F2L((tol/scale*cm)/pixl) + 20 );
                 Image1->Canvas->LineTo(Image1->Width, F2L((tol/scale*cm)/pixl) + 20);
@@ -269,7 +268,6 @@ void __fastcall TForm1::Button1Click(TObject *Sender)
             if  ( z < 0 )     //вносим частицы, вылетевшие на поврехность,  массив
             {
                 long r1 = F2L( sqrt(pow( ( (x*cm)/pixl)/scale,2 )+ pow( ( (y*cm)/pixl)/scale ,2 ) ) );
-                Energy[r1]++;
                 long x1 = F2L( ((x*cm)/pixl)/scale ) + (N-1)/2;
                 long y1 = F2L( ((y*cm)/pixl)/scale ) + (N-1)/2;
                 if(r1 <= N2 ) BSE[r1]++;
@@ -294,7 +292,6 @@ void __fastcall TForm1::Button1Click(TObject *Sender)
         {
             BSE[i] = BSE[i]/current;
         }
-        for (long i = 0; i < 2000; i++) Memo3->Lines->Add(Energy[i]);
         double BSy = (double)l/current;
         Edit12->Text = BSy;
         Edit3->Text = (double)o/current;
